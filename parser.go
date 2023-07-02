@@ -361,6 +361,7 @@ func (f *File) parse(reader io.Reader) (err error) {
 		name = strings.ToLower(DefaultSection)
 	}
 	section, _ := f.NewSection(name)
+	parentSection := section
 
 	// This "last" is not strictly equivalent to "previous one" if current key is not the first nested key
 	var isLastValueEmpty bool
@@ -432,16 +433,13 @@ func (f *File) parse(reader io.Reader) (err error) {
 			}
 
 			name := string(line[1:closeIdx])
-			// Check if this section already exists
-			if ss, ok := f.sections[name]; ok {
-				for _, s := range ss {
-					if s.EndLine == 0 {
-						s.EndLine = lineNum - 1
-					}
-				}
-			}
 			section, err = f.NewSection(name)
 			section.StartLine = lineNum
+			if !strings.HasPrefix(name, parentSection.name) {
+				section.EndLine = lineNum - 1
+				parentSection.EndLine = lineNum - 1
+				parentSection = section
+			}
 			if err != nil {
 				return err
 			}
@@ -527,5 +525,6 @@ func (f *File) parse(reader io.Reader) (err error) {
 		p.comment.Reset()
 		lastRegularKey = key
 	}
+	section.EndLine = lineNum - 1
 	return nil
 }
