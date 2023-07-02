@@ -433,10 +433,11 @@ func (f *File) parse(reader io.Reader) (err error) {
 			}
 
 			name := string(line[1:closeIdx])
+			lastSection := section
 			section, err = f.NewSection(name)
 			section.StartLine = lineNum
 			if !strings.HasPrefix(name, parentSection.name) {
-				section.EndLine = lineNum - 1
+				lastSection.EndLine = lineNum - 1
 				parentSection.EndLine = lineNum - 1
 				parentSection = section
 			}
@@ -525,6 +526,7 @@ func (f *File) parse(reader io.Reader) (err error) {
 		p.comment.Reset()
 		lastRegularKey = key
 	}
+	parentSection.EndLine = lineNum - 1
 	section.EndLine = lineNum - 1
 	return nil
 }
