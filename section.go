@@ -22,12 +22,14 @@ import (
 
 // Section represents a config section.
 type Section struct {
-	f        *File
-	Comment  string
-	name     string
-	keys     map[string]*Key
-	keyList  []string
-	keysHash map[string]string
+	f         *File
+	Comment   string
+	StartLine int
+	EndLine   int
+	name      string
+	keys      map[string]*Key
+	keyList   []string
+	keysHash  map[string]string
 
 	isRawSection bool
 	rawBody      string
@@ -249,7 +251,12 @@ func (s *Section) ChildSections() []*Section {
 	children := make([]*Section, 0, 3)
 	for _, name := range s.f.sectionList {
 		if strings.HasPrefix(name, prefix) {
-			children = append(children, s.f.sections[name]...)
+			cs := s.f.sections[name]
+			for _, ss := range cs {
+				if s.StartLine < ss.StartLine && s.EndLine > ss.StartLine {
+					children = append(children, ss)
+				}
+			}
 		}
 	}
 	return children

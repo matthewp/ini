@@ -390,8 +390,10 @@ func (f *File) parse(reader io.Reader) (err error) {
 		}
 	}
 
+	lineNum := -1
 	for !p.isEOF {
 		line, err = p.readUntil('\n')
+		lineNum++
 		if err != nil {
 			return err
 		}
@@ -430,7 +432,16 @@ func (f *File) parse(reader io.Reader) (err error) {
 			}
 
 			name := string(line[1:closeIdx])
+			// Check if this section already exists
+			if ss, ok := f.sections[name]; ok {
+				for _, s := range ss {
+					if s.EndLine == 0 {
+						s.EndLine = lineNum - 1
+					}
+				}
+			}
 			section, err = f.NewSection(name)
+			section.StartLine = lineNum
 			if err != nil {
 				return err
 			}
